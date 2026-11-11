@@ -106,13 +106,14 @@ def test_config_validation(tmp_path):
 
 def test_example_config_loads():
     cfg = load_config("config.example.yaml")
-    assert [p.name for p in cfg.profiles] == ["backend", "data"]
+    assert [p.name for p in cfg.profiles] == ["tech", "data", "it", "consulting", "finance", "vc", "innovation"]
+    assert cfg.master_resume.name == "master_resume.yaml"
 
 
 def test_search_url():
     cfg = load_config("config.example.yaml")
     url = search_url(cfg.profiles[0], "Backend Engineer", page=1)
-    for part in ("f_AL=true", "f_WT=2", "f_E=3%2C4", "f_TPR=r86400", "start=25", "keywords=Backend+Engineer"):
+    for part in ("f_AL=true", "f_E=2%2C3", "f_TPR=r86400", "start=25", "keywords=Backend+Engineer"):
         assert part in url
 
 

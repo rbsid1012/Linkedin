@@ -46,7 +46,7 @@ JOB = JobInfo("1", "Backend Engineer", "Acme", "u", "")
 
 def test_apply_fills_and_submits(page, tmp_path):
     cfg, prof, tr = setup(tmp_path, CAND)
-    res = apply_easy(page, JOB, prof, cfg, tr, Answerer(CAND), "apply")
+    res = apply_easy(page, JOB, prof, prof.resume, cfg, tr, Answerer(CAND), "apply")
     assert res.status == "applied", res.detail
     sub = page.evaluate("window.__submitted")
     assert sub == {"phone": "5551234567", "years": "6", "sponsor": "n",
@@ -55,7 +55,7 @@ def test_apply_fills_and_submits(page, tmp_path):
 
 def test_rehearse_never_submits(page, tmp_path):
     cfg, prof, tr = setup(tmp_path, CAND)
-    res = apply_easy(page, JOB, prof, cfg, tr, Answerer(CAND), "rehearse")
+    res = apply_easy(page, JOB, prof, prof.resume, cfg, tr, Answerer(CAND), "rehearse")
     assert res.status == "rehearsed"
     assert page.evaluate("window.__submitted") is None
     assert not page.locator("#dlg").is_visible()  # discarded
@@ -64,7 +64,7 @@ def test_rehearse_never_submits(page, tmp_path):
 def test_unknown_required_question_aborts_and_is_logged(page, tmp_path):
     cand = {k: v for k, v in CAND.items() if k != "phone"}
     cfg, prof, tr = setup(tmp_path, cand)
-    res = apply_easy(page, JOB, prof, cfg, tr, Answerer(cand), "apply")
+    res = apply_easy(page, JOB, prof, prof.resume, cfg, tr, Answerer(cand), "apply")
     assert res.status == "needs_manual" and "phone" in res.detail.lower()
     assert page.evaluate("window.__submitted") is None
     assert tr.unanswered_summary()[0][0].startswith("mobile phone")

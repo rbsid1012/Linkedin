@@ -1,5 +1,9 @@
 # Copy to config.yaml and edit. config.yaml is git-ignored.
 
+# Tailored resumes are built per job from this file (see master_resume.example.yaml).
+# Remove this line to use a fixed `resume: path.pdf` per profile instead.
+master_resume: master_resume.yaml
+
 settings:
   daily_limit: 20          # hard cap per rolling 24h. Keep it low; see README.
   max_per_run: 10
@@ -37,26 +41,58 @@ candidate:
     - match: "english.*proficien"
       answer: "Native or bilingual"
 
-# One profile = one search + one resume. A job found under a profile is applied to
-# with that profile's resume. First profile to see a job wins (jobs are de-duplicated).
+# One profile = one search + one emphasis. A job found under a profile gets a resume built
+# with that profile's `emphasis` weights (tag -> weight) plus the job description's own keywords.
+# First profile to see a job wins (jobs are de-duplicated), so keep title_include tight.
+# Many finance/VC/consulting postings are NOT Easy Apply (they send you to the company's site);
+# those are skipped and logged as "no Easy Apply".
 profiles:
-  - name: backend
-    resume: resumes/backend.pdf
-    keywords: ["Backend Engineer", "Python Developer"]
+  - name: tech
+    keywords: ["Software Engineer", "Backend Engineer", "Full Stack Developer"]
     location: United States
-    work_types: [remote]
-    experience_levels: [associate, mid-senior]
-    posted_within_hours: 24
-    title_include: [backend, python, software engineer]
-    title_exclude: [intern, staff, principal, manager]
-    company_exclude: [Revature]
-    description_exclude: ["security clearance", "no sponsorship"]
-
+    experience_levels: [entry, associate]
+    title_include: [engineer, developer]
+    title_exclude: [intern, staff, principal, manager, data]
+    emphasis: {python: 2, kubernetes: 1, aws: 1, devops: 1}
   - name: data
-    resume: resumes/data.pdf
-    keywords: ["Data Engineer", "Analytics Engineer"]
+    keywords: ["Data Analyst", "Data Engineer", "Analytics Engineer"]
     location: United States
-    work_types: [remote, hybrid]
-    experience_levels: [associate, mid-senior]
-    title_include: [data]
+    experience_levels: [entry, associate]
+    title_include: [data, analytics, analyst]
+    title_exclude: [intern, manager, financial]
+    emphasis: {sql: 2, python: 1, etl: 2, data: 2}
+  - name: it
+    keywords: ["IT Analyst", "Systems Engineer", "Solutions Engineer"]
+    location: United States
+    experience_levels: [entry, associate]
+    title_include: [it, systems, solutions, support]
     title_exclude: [intern, manager]
+    emphasis: {devops: 2, aws: 1, kubernetes: 1}
+  - name: consulting
+    keywords: ["Technology Consultant", "Business Analyst", "Strategy Analyst"]
+    location: United States
+    experience_levels: [entry, associate]
+    title_include: [consultant, business analyst, strategy]
+    title_exclude: [intern, manager, senior]
+    emphasis: {consulting: 3, stakeholder: 2, client: 2, communication: 1}
+  - name: finance
+    keywords: ["Financial Analyst", "Investment Analyst", "Quantitative Analyst"]
+    location: United States
+    experience_levels: [entry, associate]
+    title_include: [financial, finance, investment, quant]
+    title_exclude: [intern, manager, senior, accountant]
+    emphasis: {finance: 3, modeling: 2, excel: 2, forecasting: 2}
+  - name: vc
+    keywords: ["Venture Capital Analyst", "Investment Associate", "Venture Associate"]
+    location: United States
+    experience_levels: [entry, associate]
+    title_include: [venture, vc, investment associate]
+    title_exclude: [intern, manager, partner]
+    emphasis: {vc: 3, startups: 2, research: 2}
+  - name: innovation
+    keywords: ["Innovation Analyst", "Product Manager", "Strategy & Operations"]
+    location: United States
+    experience_levels: [entry, associate]
+    title_include: [innovation, product, operations, strategy]
+    title_exclude: [intern, director, senior]
+    emphasis: {startups: 2, research: 1, stakeholder: 1}

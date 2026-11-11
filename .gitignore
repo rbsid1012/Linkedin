@@ -7,3 +7,5 @@ config.yaml
 applier.db
 resumes/*.pdf
 resumes/*.docx
+out/
+master_resume.yaml

@@ -1,0 +1,35 @@
+# YOUR facts. The tool only selects and orders these; it never rewrites or invents.
+# Tag every bullet with the keywords it demonstrates (lowercase, as a job post would say them).
+# More bullets than fit is the point: it picks the best ones per job.
+contact:
+  name: Jane Doe
+  email: jane@example.com
+  phone: "555-123-4567"
+  location: Austin, TX
+  links:
+    - {label: LinkedIn, url: "https://www.linkedin.com/in/janedoe"}
+    - {label: GitHub, url: "https://github.com/janedoe"}
+headline: ""            # optional; a profile can override with its own `headline`
+summaries:              # optional; write your own variants, keyed by a tag. `default` is the fallback.
+  default: "Engineer with 4 years building data products."
+  finance: "Quantitative engineer with experience in financial modelling and reporting automation."
+education:
+  - {school: State University, degree: "B.S. Computer Science", dates: "2018 -- 2022", location: Austin TX, details: ["GPA 3.7"]}
+experience:             # keep newest first
+  - company: Acme Corp
+    title: Software Engineer
+    location: Remote
+    dates: "2022 -- Present"
+    bullets:
+      - {text: "Built a Python ETL pipeline moving 2M rows/day into Snowflake, cutting report latency from 6h to 40min.", tags: [python, etl, snowflake, data, sql]}
+      - {text: "Led migration of 12 services to Kubernetes, reducing infra cost 22%.", tags: [kubernetes, aws, devops, cost]}
+      - {text: "Built an Excel/SQL revenue model used by finance to forecast quarterly bookings within 3% error.", tags: [finance, forecasting, excel, sql, modeling]}
+      - {text: "Presented weekly delivery status to 3 client stakeholders; ran requirement workshops.", tags: [consulting, stakeholder, client, communication]}
+projects:
+  - name: Startup deal tracker
+    dates: "2023"
+    bullets:
+      - {text: "Scraped and ranked 5k seed-stage startups by funding signals; used by a 3-person angel group.", tags: [vc, startups, python, research]}
+skills:                 # a skill is listed first when the job description mentions it
+  Languages: [Python, SQL, Java]
+  Tools: [Snowflake, Kubernetes, Excel, Tableau]

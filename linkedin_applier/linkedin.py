@@ -17,6 +17,7 @@ from playwright.sync_api import Locator, Page, TimeoutError as PWTimeout
 
 from .config import Config, Profile
 from .filters import evaluate
+from .resume import build_resume, load_master
 from .forms import EXTRACT_JS, Answerer, FormField, norm, pick_option
 from .search import search_url
 from .tracker import Tracker
@@ -200,19 +201,19 @@ def _apply_answer(dialog: Locator, f: FormField, ans) -> None:
             el.set_checked(want, force=True)
 
 
-def upload_documents(dialog: Locator, profile: Profile) -> None:
+def upload_documents(dialog: Locator, resume: Path, cover_letter: Path | None) -> None:
     inputs = dialog.locator("input[type=file]")
     for i in range(inputs.count()):
         inp = inputs.nth(i)
         ctx = (inp.evaluate("e => (e.closest('div,fieldset,section')||document.body).innerText.slice(0,300)") or "").lower()
         if "cover" in ctx:
-            if profile.cover_letter:
-                inp.set_input_files(str(profile.cover_letter))
+            if cover_letter:
+                inp.set_input_files(str(cover_letter))
             continue
-        inp.set_input_files(str(profile.resume))
+        inp.set_input_files(str(resume))
 
 
-def apply_easy(page: Page, job: JobInfo, profile: Profile, cfg: Config, tracker: Tracker, answerer: Answerer,
+def apply_easy(page: Page, job: JobInfo, profile: Profile, resume: Path, cfg: Config, tracker: Tracker, answerer: Answerer,
                mode: str, ask=None) -> Result:
     btn = easy_apply_button(page)
     if not btn:
@@ -227,7 +228,7 @@ def apply_easy(page: Page, job: JobInfo, profile: Profile, cfg: Config, tracker:
     try:
         for _ in range(MAX_STEPS):
             d = _dialog(page)
-            upload_documents(d, profile)
+            upload_documents(d, resume, profile.cover_letter)
             try:
                 missing = fill_fields(page, d, answerer, ask, tracker, job.job_id)
             except ValueError as e:
@@ -288,6 +289,7 @@ def run(cfg: Config, tracker: Tracker, mode: str, only_profile: str | None = Non
     from playwright.sync_api import sync_playwright
 
     answerer = Answerer(cfg.candidate, learned=tracker.learned)
+    master = load_master(cfg.master_resume) if cfg.master_resume else None
 
     def ask(f: FormField):
         if not interactive or cfg.settings.unknown_question_policy != "ask":
@@ -333,8 +335,7 @@ def run(cfg: Config, tracker: Tracker, mode: str, only_profile: str | None = Non
                             job = read_job(page, job_id)
                             if not job:
                                 continue
-                            rec = dict(title=job.title, company=job.company, url=job.url,
-                                       profile=profile.name, resume=profile.resume)
+                            rec = dict(title=job.title, company=job.company, url=job.url, profile=profile.name)
                             if already_applied(page):
                                 tracker.record(job_id, "skipped", detail="already applied", **rec)
                                 continue
@@ -346,12 +347,27 @@ def run(cfg: Config, tracker: Tracker, mode: str, only_profile: str | None = Non
                             if not easy_apply_button(page):
                                 tracker.record(job_id, "skipped", detail="no Easy Apply", **rec)
                                 continue
+
+                            # Steps 2+3: tailored LaTeX + PDF + Overleaf launcher for this exact job.
+                            resume, note = profile.resume, ""
+                            if master:
+                                built = build_resume(master, profile, job.title, job.description,
+                                                     s.output_dir / profile.name / job.job_id,
+                                                     want_pdf=True)
+                                resume, note = built.pdf, f" tex={built.tex} overleaf={built.overleaf}"
+                                if built.error:
+                                    log.warning("resume for %s: %s", job.job_id, built.error.splitlines()[0])
+                            rec["resume"] = resume or ""
                             if mode == "scan":
-                                tracker.record(job_id, "matched", detail=f"would use {profile.resume.name}", **rec)
-                                log.info("match %s @ %s -> %s", job.title, job.company, profile.resume.name)
+                                tracker.record(job_id, "matched", detail=f"resume={resume}{note}", **rec)
+                                log.info("match %s @ %s -> %s", job.title, job.company, resume)
                                 continue
-                            res = apply_easy(page, job, profile, cfg, tracker, answerer, mode, ask)
-                            tracker.record(job_id, res.status, detail=res.detail, **rec)
+                            if not resume or not Path(resume).is_file():
+                                tracker.record(job_id, "failed", detail=f"no resume PDF{note}", **rec)
+                                failures += 1
+                                continue
+                            res = apply_easy(page, job, profile, Path(resume), cfg, tracker, answerer, mode, ask)
+                            tracker.record(job_id, res.status, detail=res.detail + note, **rec)
                             log.info("%-12s %s @ %s %s", res.status, job.title, job.company, res.detail)
                             if res.status == "applied":
                                 applied_this_run += 1
