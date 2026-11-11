@@ -1,0 +1,62 @@
+# Copy to config.yaml and edit. config.yaml is git-ignored.
+
+settings:
+  daily_limit: 20          # hard cap per rolling 24h. Keep it low; see README.
+  max_per_run: 10
+  min_delay: 20            # seconds between applications (randomised)
+  max_delay: 60
+  pages_per_keyword: 2     # 25 jobs per page
+  headless: false
+  unknown_question_policy: skip   # skip | ask (ask needs: run --interactive)
+
+candidate:
+  first_name: Jane
+  last_name: Doe
+  email: jane@example.com
+  phone: "5551234567"
+  city: "Austin, TX"
+  linkedin_url: https://www.linkedin.com/in/janedoe
+  github_url: https://github.com/janedoe
+  website: https://janedoe.dev
+  authorized_to_work: true
+  requires_sponsorship: false
+  willing_to_relocate: false
+  ok_with_remote: true
+  ok_with_onsite: false
+  salary_expectation: 120000
+  notice_period: "2 weeks"
+  years_experience:          # matched by skill name found in the question
+    default: 3
+    python: 5
+    java: 1
+    sql: 4
+  # Explicit answers win over everything else. First regex match on the question wins.
+  answers:
+    - match: "how did you hear"
+      answer: "LinkedIn"
+    - match: "english.*proficien"
+      answer: "Native or bilingual"
+
+# One profile = one search + one resume. A job found under a profile is applied to
+# with that profile's resume. First profile to see a job wins (jobs are de-duplicated).
+profiles:
+  - name: backend
+    resume: resumes/backend.pdf
+    keywords: ["Backend Engineer", "Python Developer"]
+    location: United States
+    work_types: [remote]
+    experience_levels: [associate, mid-senior]
+    posted_within_hours: 24
+    title_include: [backend, python, software engineer]
+    title_exclude: [intern, staff, principal, manager]
+    company_exclude: [Revature]
+    description_exclude: ["security clearance", "no sponsorship"]
+
+  - name: data
+    resume: resumes/data.pdf
+    keywords: ["Data Engineer", "Analytics Engineer"]
+    location: United States
+    work_types: [remote, hybrid]
+    experience_levels: [associate, mid-senior]
+    title_include: [data]
+    title_exclude: [intern, manager]
