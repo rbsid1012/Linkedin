@@ -3,6 +3,7 @@
 # Tailored resumes are built per job from this file (see master_resume.example.yaml).
 # Remove this line to use a fixed `resume: path.pdf` per profile instead.
 master_resume: master_resume.yaml
+answers_file: answers.example.yaml   # copy to answers.yaml, edit, and point this at it
 
 settings:
   daily_limit: 20          # hard cap per rolling 24h. Keep it low; see README.
@@ -76,6 +77,8 @@ profiles:
     title_exclude: [intern, manager, senior]
     emphasis: {consulting: 3, stakeholder: 2, client: 2, communication: 1}
   - name: finance
+    answers:            # optional, beat global answers for finance jobs only
+      - {match: "why (do you want|are you interested)", answer: "Finance is where I've applied my modelling work; {company} is a place I'd like to do more of it."}
     keywords: ["Financial Analyst", "Investment Analyst", "Quantitative Analyst"]
     location: United States
     experience_levels: [entry, associate]

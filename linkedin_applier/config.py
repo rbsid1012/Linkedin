@@ -43,6 +43,7 @@ class Profile:
     company_exclude: list[str] = field(default_factory=list)
     description_exclude: list[str] = field(default_factory=list)
     cover_letter: Path | None = None
+    answers: list[dict] = field(default_factory=list)  # profile-specific {match, answer}; beat global ones
     emphasis: dict[str, float] = field(default_factory=dict)  # tag -> weight for tailored resumes
     headline: str = ""
 
@@ -111,6 +112,7 @@ def load_config(path: str | Path) -> Config:
                 cover_letter=_resolve(base, p["cover_letter"]) if p.get("cover_letter") else None,
                 emphasis={str(k): float(v) for k, v in (p.get("emphasis") or {}).items()},
                 headline=p.get("headline", ""),
+                answers=_check_answers(p.get("answers") or [], f"profiles[{i}].answers"),
             )
         )
     if not profiles:
@@ -119,7 +121,15 @@ def load_config(path: str | Path) -> Config:
     if len(set(names)) != len(names):
         raise ConfigError("Profile names must be unique")
 
-    return Config(settings=settings, candidate=raw.get("candidate") or {}, profiles=profiles, base_dir=base, master_resume=master)
+    candidate = raw.get("candidate") or {}
+    if raw.get("answers_file"):
+        af = _resolve(base, raw["answers_file"])
+        if not af.is_file():
+            raise ConfigError(f"answers_file not found: {af}")
+        extra = yaml.safe_load(af.read_text()) or []
+        candidate["answers"] = list(candidate.get("answers") or []) + _check_answers(extra, str(af))
+    candidate["answers"] = _check_answers(candidate.get("answers") or [], "candidate.answers")
+    return Config(settings=settings, candidate=candidate, profiles=profiles, base_dir=base, master_resume=master)
 
 
 def _resolve(base: Path, p: str | Path) -> Path:
@@ -138,3 +148,18 @@ def check_resumes(cfg: Config) -> list[str]:
         if p.cover_letter and not p.cover_letter.is_file():
             problems.append(f"[{p.name}] cover letter not found: {p.cover_letter}")
     return problems
+
+
+def _check_answers(items: list, where: str) -> list[dict]:
+    import re
+
+    out = []
+    for j, it in enumerate(items):
+        if not isinstance(it, dict) or "match" not in it or "answer" not in it:
+            raise ConfigError(f"{where}[{j}] needs 'match' and 'answer'")
+        try:
+            re.compile(it["match"])
+        except re.error as e:
+            raise ConfigError(f"{where}[{j}] bad regex {it['match']!r}: {e}")
+        out.append(it)
+    return out

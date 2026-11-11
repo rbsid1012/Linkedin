@@ -1,0 +1,9 @@
+# Your answers, first regex match on the question wins. `decline` picks a "prefer not to say" option.
+# {company} and {title} are filled in per job. Profile-level `answers:` in config.yaml beat these.
+# Only write things that are true: they are submitted under your name.
+- match: "why (do you want|are you interested).*(join|work|role)"
+  answer: "I'm interested in {company} and the {title} role because it matches the work I've been doing and where I want to grow."
+- match: "how did you hear"
+  answer: "LinkedIn"
+- match: "english.*(level|proficien)"
+  answer: "Native or bilingual"

@@ -128,3 +128,28 @@ def test_tracker(tmp_path):
     assert t.unanswered_summary() == [("q", 2)]
     t.learn("q", "a")
     assert t.learned("q") == "a"
+
+
+def test_profile_answers_beat_global_and_template_fills():
+    cand = {**CAND, "answers": [{"match": "why", "answer": "global {company}"}]}
+    a = Answerer(cand, extra=[{"match": "why", "answer": "profile {company} / {title} / {nope}"}])
+    a.ctx = {"company": "Acme", "title": "Analyst"}
+    assert a.answer(f("Why do you want to join us?")) == "profile Acme / Analyst / {nope}"
+    b = Answerer(cand)
+    b.ctx = {"company": "Acme"}
+    assert b.answer(f("Why us?")) == "global Acme"
+
+
+def test_answer_with_stray_braces_is_left_alone():
+    a = Answerer({**CAND, "answers": [{"match": "json", "answer": "{ not a template"}]})
+    assert a.answer(f("json?")) == "{ not a template"
+
+
+def test_answers_file_and_bad_regex(tmp_path):
+    (tmp_path / "a.yaml").write_text("- {match: 'hello', answer: 'hi'}")
+    c = tmp_path / "c.yaml"
+    c.write_text("answers_file: a.yaml\nprofiles:\n  - {name: a, resume: r.pdf, keywords: [k]}")
+    assert load_config(c).candidate["answers"] == [{"match": "hello", "answer": "hi"}]
+    (tmp_path / "a.yaml").write_text("- {match: '(', answer: 'x'}")
+    with pytest.raises(ConfigError):
+        load_config(c)

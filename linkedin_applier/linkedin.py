@@ -288,7 +288,7 @@ def _inline_error(page: Page) -> str:
 def run(cfg: Config, tracker: Tracker, mode: str, only_profile: str | None = None, interactive: bool = False) -> None:
     from playwright.sync_api import sync_playwright
 
-    answerer = Answerer(cfg.candidate, learned=tracker.learned)
+    answerers = {pr.name: Answerer(cfg.candidate, learned=tracker.learned, extra=pr.answers) for pr in cfg.profiles}
     master = load_master(cfg.master_resume) if cfg.master_resume else None
 
     def ask(f: FormField):
@@ -366,6 +366,8 @@ def run(cfg: Config, tracker: Tracker, mode: str, only_profile: str | None = Non
                                 tracker.record(job_id, "failed", detail=f"no resume PDF{note}", **rec)
                                 failures += 1
                                 continue
+                            answerer = answerers[profile.name]
+                            answerer.ctx = {"company": job.company, "title": job.title}
                             res = apply_easy(page, job, profile, Path(resume), cfg, tracker, answerer, mode, ask)
                             tracker.record(job_id, res.status, detail=res.detail + note, **rec)
                             log.info("%-12s %s @ %s %s", res.status, job.title, job.company, res.detail)

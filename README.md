@@ -63,6 +63,8 @@ Suggested order: `scan` → `rehearse` on a few jobs → `report` → add missin
 
 ## Screening questions
 
+Put your own answers in `answers.yaml` (see `answers.example.yaml`; regex on the question, `{company}`/`{title}` filled per job) or under a profile's `answers:` so finance and tech jobs get different wording. `report` prints ready-to-paste stubs for every question that blocked a job.
+
 Answer order: `candidate.answers` (regex → answer) > answers you typed with `--interactive` and
 `unknown_question_policy: ask` > built-in rules (years of experience per skill, work authorization,
 sponsorship, salary, notice period, contact fields, EEO questions → "decline"). Anything else that is

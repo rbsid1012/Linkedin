@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import argparse
+import json
+import re
 import logging
 import sys
 
@@ -41,6 +43,9 @@ def main(argv: list[str] | None = None) -> int:
             print("\nQuestions that blocked applications (add them to candidate.answers):")
             for q, n in qs:
                 print(f"  {n:3}x  {q}")
+            print("\nPaste into answers.yaml and fill in (regex match, first hit wins):")
+            for q, _ in qs:
+                print(f"- match: {json.dumps(re.escape(q))}\n  answer: \"\"")
         return 0
 
     if args.cmd == "preview":

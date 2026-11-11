@@ -40,11 +40,14 @@ Answer = str | bool | None
 
 
 class Answerer:
-    def __init__(self, candidate: dict[str, Any], learned: Callable[[str], str | None] = lambda q: None):
+    def __init__(self, candidate: dict[str, Any], learned: Callable[[str], str | None] = lambda q: None,
+                 extra: list[dict] | None = None):
         self.c = candidate
         self.learned = learned
+        self.ctx: dict[str, str] = {}  # per-job values usable as {company}, {title} in answers
         self.explicit: list[tuple[re.Pattern, Any]] = []
-        for item in candidate.get("answers") or []:
+        # profile-specific answers first, so they beat the global ones
+        for item in list(extra or []) + list(candidate.get("answers") or []):
             self.explicit.append((re.compile(item["match"], re.I), item["answer"]))
 
     # -- public ---------------------------------------------------------
@@ -54,13 +57,27 @@ class Answerer:
             return None
         for pat, ans in self.explicit:
             if pat.search(q):
-                return ans
+                return self._fill(ans)
         taught = self.learned(q)
         if taught is not None:
             return taught
         if f.kind == "checkbox":
             return self._checkbox(q)
         return self._builtin(q, f)
+
+    def _fill(self, ans: Any) -> Any:
+        """Substitute {company}/{title}; unknown placeholders and stray braces are left as written."""
+        if not isinstance(ans, str) or "{" not in ans:
+            return ans
+
+        class _Keep(dict):
+            def __missing__(self, k):
+                return "{" + k + "}"
+
+        try:
+            return ans.format_map(_Keep(self.ctx))
+        except (ValueError, IndexError, KeyError, AttributeError):
+            return ans
 
     # -- rules ------------------------------------------------------------
     def _checkbox(self, q: str) -> Answer:

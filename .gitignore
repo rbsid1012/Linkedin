@@ -9,3 +9,4 @@ resumes/*.pdf
 resumes/*.docx
 out/
 master_resume.yaml
+answers.yaml
